@@ -1,0 +1,72 @@
+name: Health E-Commerce CI (STARTER)
+
+# TODO 1: Configure triggers
+# HINT: on: [push, pull_request]
+# HINT: branches: [main, develop]
+
+on:
+  push:
+    branches: 
+      # TODO: Add branches (main, develop)
+  pull_request:
+    branches:
+      # TODO: Add branches
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # ==========================================
+  # TODO 2: Complete Lint Job
+  # ==========================================
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      # TODO: Add checkout step
+      # HINT: - uses: actions/checkout@v4
+      
+      # TODO: Add Node.js setup step
+      # HINT: - uses: actions/setup-node@v4
+      # HINT:   with:
+      # HINT:     node-version: ${{ env.NODE_VERSION }}
+      
+      # TODO: Install dependencies
+      # HINT: - run: npm ci
+      
+      # TODO: Run linter
+      # HINT: - run: npm run lint
+
+  # ==========================================
+  # TODO 3: Complete Test Job
+  # ==========================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    # TODO: Add MongoDB service container
+    # HINT: services:
+    # HINT:   mongodb:
+    # HINT:     image: mongo:7.0
+    # HINT:     ports:
+    # HINT:       - 27017:27017
+    
+    steps:
+      # TODO: Add checkout step
+      
+      # TODO: Add Node.js setup
+      
+      # TODO: Install dependencies
+      
+      # TODO: Run tests
+      # HINT: - run: npm test
+
+  # ==========================================
+  # TODO 4: Add Coverage Job (Optional)
+  # ==========================================
+  # TODO: Create job untuk upload coverage ke Codecov
+  # HINT: Use codecov/codecov-action@v3
+
+

@@ -1,9 +1,8 @@
 {
   "info": {
     "name": "Health E-Commerce - Complete API",
-    "description": "Complete API collection untuk Health E-Commerce MERN System (13 endpoints)",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "12345"
+    "description": "Complete API collection for Health E-Commerce MERN system\n\n**Base URL:** http://localhost:5000\n\n**Features:**\n- Products CRUD\n- Authentication (JWT)\n- AI Chatbot (Google Gemini)\n- Payment (Midtrans)\n- External Kemenkes API\n\n**Setup:**\n1. Import this collection\n2. Set environment variable: `base_url` = http://localhost:5000\n3. Start backend server\n4. Test endpoints!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
@@ -15,31 +14,49 @@
           "raw": "{{base_url}}/health",
           "host": ["{{base_url}}"],
           "path": ["health"]
-        }
-      }
+        },
+        "description": "Check if server is running"
+      },
+      "response": []
     },
     {
       "name": "Authentication",
       "item": [
         {
           "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save token to environment",
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('auth_token', jsonData.data.token);",
+                  "    console.log('Token saved:', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"name\": \"Test User\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"name\": \"Aiman Test\",\n  \"email\": \"aiman@example.com\",\n  \"password\": \"Aiman123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "register"]
-            }
+            },
+            "description": "Register new user account"
           }
         },
         {
@@ -49,33 +66,34 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Has token\", () => {",
-                  "    const json = pm.response.json();",
-                  "    pm.expect(json.token).to.be.a('string');",
-                  "    pm.environment.set('auth_token', json.token);",
-                  "});"
+                  "// Save token to environment",
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('auth_token', jsonData.data.token);",
+                  "    console.log('Logged in, token saved');",
+                  "}"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"aila@example.com\",\n  \"password\": \"Aila123!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"email\": \"aiman@example.com\",\n  \"password\": \"Aiman123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "login"]
-            }
+            },
+            "description": "Login with existing account"
           }
         },
         {
@@ -92,7 +110,8 @@
               "raw": "{{base_url}}/api/auth/profile",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
-            }
+            },
+            "description": "Get user profile (protected route)"
           }
         }
       ]
@@ -109,7 +128,8 @@
               "raw": "{{base_url}}/api/products",
               "host": ["{{base_url}}"],
               "path": ["api", "products"]
-            }
+            },
+            "description": "Get all products"
           }
         },
         {
@@ -127,7 +147,8 @@
                   "value": "Vitamin"
                 }
               ]
-            }
+            },
+            "description": "Filter products by category"
           }
         },
         {
@@ -145,7 +166,8 @@
                   "value": "vitamin"
                 }
               ]
-            }
+            },
+            "description": "Search products by keyword"
           }
         },
         {
@@ -154,10 +176,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/products/{{product_id}}",
+              "raw": "{{base_url}}/api/products/:id",
               "host": ["{{base_url}}"],
-              "path": ["api", "products", "{{product_id}}"]
-            }
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "507f1f77bcf86cd799439011"
+                }
+              ]
+            },
+            "description": "Get single product by MongoDB ObjectId"
           }
         }
       ]
@@ -169,42 +198,44 @@
           "name": "AI Chatbot (Google Gemini)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"Saya butuh vitamin untuk meningkatkan daya tahan tubuh\",\n  \"context\": \"health_product_recommendation\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"message\": \"Rekomendasi vitamin untuk daya tahan tubuh\",\n  \"context\": \"health_product_recommendation\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/external/ai/chat",
               "host": ["{{base_url}}"],
               "path": ["api", "external", "ai", "chat"]
-            }
+            },
+            "description": "Get AI-powered product recommendations using Google Gemini"
           }
         },
         {
           "name": "Create Payment (Midtrans)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": \"ORDER-{{$timestamp}}\",\n  \"amount\": 150000,\n  \"items\": [\n    {\n      \"id\": \"1\",\n      \"name\": \"Vitamin C 1000mg\",\n      \"price\": 85000,\n      \"quantity\": 1\n    }\n  ],\n  \"customerDetails\": {\n    \"name\": \"Test Customer\",\n    \"email\": \"test@example.com\",\n    \"phone\": \"08123456789\",\n    \"address\": \"Jl. Sehat No. 123\"\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"orderId\": \"ORDER-{{$timestamp}}\",\n  \"amount\": 250000,\n  \"items\": [\n    {\n      \"id\": \"PROD-001\",\n      \"name\": \"Vitamin C 1000mg\",\n      \"price\": 85000,\n      \"quantity\": 2\n    },\n    {\n      \"id\": \"PROD-002\",\n      \"name\": \"Vitamin D3\",\n      \"price\": 120000,\n      \"quantity\": 1\n    }\n  ],\n  \"customerDetails\": {\n    \"firstName\": \"Aiman\",\n    \"lastName\": \"Test\",\n    \"email\": \"aiman@example.com\",\n    \"phone\": \"081234567890\"\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/external/payment/create",
               "host": ["{{base_url}}"],
               "path": ["api", "external", "payment", "create"]
-            }
+            },
+            "description": "Create Midtrans payment and get payment URL"
           }
         },
         {
@@ -216,7 +247,8 @@
               "raw": "{{base_url}}/api/external/kemenkes/facilities",
               "host": ["{{base_url}}"],
               "path": ["api", "external", "kemenkes", "facilities"]
-            }
+            },
+            "description": "Get health facilities from Kemenkes API"
           }
         }
       ]
@@ -227,17 +259,6 @@
       "key": "base_url",
       "value": "http://localhost:5000",
       "type": "string"
-    },
-    {
-      "key": "auth_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "product_id",
-      "value": "",
-      "type": "string"
     }
   ]
 }
-

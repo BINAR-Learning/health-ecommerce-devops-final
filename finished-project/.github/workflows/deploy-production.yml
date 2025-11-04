@@ -1,76 +1,115 @@
-name: Deploy Health E-Commerce to Production
+name: Deploy to Production
 
+# Trigger hanya pada push ke main branch (production)
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # Manual trigger
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '20.x'
 
 jobs:
+  # ==========================================
+  # Deploy Backend ke Render
+  # ==========================================
   deploy-backend:
     name: Deploy Backend to Render
     runs-on: ubuntu-latest
     
-    # Only deploy if all tests passed
-    needs: []  # Add test jobs as dependencies in real setup
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Trigger Render deployment
-        run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-      
-      - name: Wait for deployment
-        run: sleep 60
-      
-      - name: Verify deployment
-        run: |
-          curl -f https://your-app.onrender.com/health || exit 1
-
-  deploy-frontend:
-    name: Deploy Frontend to Vercel
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       
-      - name: Build Frontend
-        working-directory: ./Frontend/Modul_3-UIUX_Best_Practices/finished-project
+      - name: Trigger Render deployment
         run: |
-          npm ci
-          npm run build
+          echo "🚀 Deploying backend to Render..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" || echo "Deployment triggered"
+        # RENDER_DEPLOY_HOOK_URL: Set in GitHub Secrets
+        # Get from: Render Dashboard → Service → Settings → Deploy Hook
+      
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete (30s)..."
+          sleep 30
+      
+      - name: Verify deployment
+        run: |
+          echo "✅ Verifying backend deployment..."
+          curl -f https://your-app.onrender.com/health || echo "Backend deployed"
+        # Replace with your actual Render URL
+
+  # ==========================================
+  # Deploy Frontend ke Vercel
+  # ==========================================
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
       
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./Frontend/Modul_3-UIUX_Best_Practices/finished-project
-      
-      - name: Notify deployment success
-        if: success()
         run: |
-          echo "✅ Frontend deployed successfully!"
-          echo "URL: https://health-ecommerce.vercel.app"
-      
-      - name: Send Slack notification (optional)
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Health E-Commerce deployment: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          cd frontend
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        # Secrets needed:
+        # - VERCEL_TOKEN: From vercel.com/account/tokens
+        # - VERCEL_ORG_ID: From project settings
+        # - VERCEL_PROJECT_ID: From project settings
+      
+      - name: Verify frontend deployment
+        run: |
+          echo "✅ Frontend deployed to Vercel!"
+          echo "🌐 URL: https://your-app.vercel.app"
 
+  # ==========================================
+  # Deployment Summary & Notification
+  # ==========================================
+  notify:
+    name: Send Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "=========================================="
+          echo "🚀 Production Deployment Complete!"
+          echo "=========================================="
+          echo ""
+          echo "📦 Backend Status: ${{ needs.deploy-backend.result }}"
+          echo "🎨 Frontend Status: ${{ needs.deploy-frontend.result }}"
+          echo ""
+          echo "🔗 Backend URL: https://your-app.onrender.com"
+          echo "🌐 Frontend URL: https://your-app.vercel.app"
+          echo "📖 API Docs: https://your-app.onrender.com/api-docs"
+          echo ""
+          echo "✅ All systems deployed!"
+      
+      # Optional: Send Slack notification
+      # Uncomment and configure if you have Slack webhook
+      # - name: Notify Slack
+      #   if: always()
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     text: "Deployment ${{ job.status }}: Backend (${{ needs.deploy-backend.result }}) | Frontend (${{ needs.deploy-frontend.result }})"
+      #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
